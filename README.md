@@ -1,18 +1,44 @@
-# RTL-Design-of-16-Bit-ALU
-This project presents the design and implementation of a 16-bit Arithmetic Logic Unit (ALU) in Verilog. Verilog is a hardware description language(HDL) used for modeling electronic systems.
+# RTL Design of a 16-bit ALU
 
-The design involves creating individual modules for logical, arithmetic, and multiplication operations and integrating them into a single ALU module. Simulation and synthesis demonstrate the functionality and correctness of the ALU design.
+A 16-bit Arithmetic Logic Unit written in Verilog. Logical, arithmetic and multiplication operations are built as separate modules and integrated into one ALU that selects the operation from an opcode. The design was verified in simulation and synthesized in Xilinx Vivado.
 
-BLOCK DIAGRAM:
+## Block diagram
 
-<img width="819" height="460" alt="image" src="https://github.com/user-attachments/assets/1fd32d8a-1f3b-4c5d-866f-f448c36f1d1a" />
+<img width="819" height="460" alt="ALU block diagram" src="https://github.com/user-attachments/assets/1fd32d8a-1f3b-4c5d-866f-f448c36f1d1a" />
 
-A and B are 16 bit inputs (operands). OP is the input which represents operator. There are 3 combinational logic units for logical, arithmetic and multiplication operations. Demuxes are used to route the input given to these units taking "OP" input as select line. A multiplexer is used to choose correct output from these blocks. In verilog code, mux and demux are written using case statement.
+| Signal | Width | Description |
+|---|---|---|
+| `A`, `B` | 16-bit | Input operands |
+| `OP` | - | Opcode that selects the operation |
+| `OUT` | 32-bit | Result (wide enough to hold the 16 × 16 multiplier output) |
 
-LOGICAL: A behavioural code is used to perform logical operations like inverting, AND, OR, XOR, shifting and rotating etc using a case statement.
+Two demuxes route `A` and `B` to the logical, arithmetic or multiplier unit based on `OP`, and a mux picks the matching result for `OUT`. The mux and demuxes are written with `case` statements.
 
-ARITHMETIC: Four 4-bit ripple carry adders are used which run almost simultaneously. Four 4-bit carry look ahead adders are used to generate carry for these ripple carry adders. Ripple carry adders save area and Carry look ahead adders save time. As CLA is used only to generate carry, not much area is used here. And it saves much time by not keeping the ripple carry adders waiting for carry_in.
+## Modules
 
-First RCA gives 4-bit sum and first CLA generates carry_out (carry_in for next RCA). Then second RCA takes this carry as input and generates next 4 bit sum. In the same way second CLA generates carry_in for third RCA. Third and fourth RCAs and CLAs too work in this way. Hence delay and area are balanced.
+**Logical unit** is behavioural code using a `case` statement. It supports invert, AND, OR, XOR, NAND, NOR, shifts and rotates (left and right).
 
-MULTIPLIER: A behavioural code is used with a for loop for multiplication.
+**Arithmetic unit** is built from four 4-bit ripple-carry adders (RCA) with four 4-bit carry-lookahead (CLA) generators:
+
+- RCAs save area, while CLAs save time.
+- The CLAs only generate carries, so they add little area. They also stop each RCA from waiting on the previous block's ripple.
+- RCA 1 produces the first 4 sum bits and CLA 1 produces the carry-in for RCA 2. The same pattern continues through the third and fourth blocks, balancing delay and area.
+
+**Multiplier** is behavioural code using a `for` loop.
+
+## Tools and flow
+
+- **Language:** Verilog
+- **Tool:** Xilinx Vivado (simulation and synthesis)
+
+To run it, open `RTL_Design_of_16_bit_ALU.xpr` in Vivado, then run the behavioural simulation and the synthesis.
+
+## Results
+
+Simulation waveforms show correct outputs for the logical, arithmetic and multiplication operations across different input combinations. Synthesis produces a hardware implementation that can target an FPGA. See `ALU_PROJECT_REPORT.pdf` for the simulation waveform and synthesized schematic.
+
+## Future work
+
+- Optimize for performance, area and power
+- Add division, floating point and pipelining
+- Run the design through the ASIC flow with OpenLane
